@@ -9,6 +9,14 @@
 import SpriteKit
 
 class GameScene: SKScene {
+    enum PhysicsCategories : UInt32 {
+        case None     = 0x0
+        case All      = 0xFFFF_FFFF
+        case Donuts   = 0b0000_0001
+        case Player   = 0b0000_0010
+        case Outline  = 0b0000_0100
+    }
+
     let playerNode = SKSpriteNode(imageNamed: "Spaceship")
     let scoreNode  = SKLabelNode(text: "score: 0")
     var score: Int = 0 {
@@ -19,12 +27,20 @@ class GameScene: SKScene {
 
     override func didMoveToView(view: SKView) {
         /* Setup your scene here */
+        self.size = view.bounds.size
+        self.physicsBody = SKPhysicsBody(edgeLoopFromRect: self.frame)
+
 
         playerNode.position = CGPointMake(CGRectGetMidX(self.frame), 100)
         playerNode.xScale = 0.25
         playerNode.yScale = 0.25
         playerNode.physicsBody = SKPhysicsBody(circleOfRadius: (playerNode.frame.size.width / 2))
         playerNode.physicsBody?.usesPreciseCollisionDetection = true
+        playerNode.physicsBody?.categoryBitMask = PhysicsCategories.Player.rawValue
+        playerNode.physicsBody?.affectedByGravity = false
+        playerNode.physicsBody?.allowsRotation = false
+        playerNode.physicsBody?.collisionBitMask = PhysicsCategories.Donuts.rawValue | PhysicsCategories.Player.rawValue
+        playerNode.physicsBody?.contactTestBitMask = PhysicsCategories.Donuts.rawValue | PhysicsCategories.Player.rawValue
 
         self.addChild(playerNode)
 
@@ -43,8 +59,17 @@ class GameScene: SKScene {
         spriteDonuts.position = CGPointMake(CGRectGetMidX(self.frame), CGRectGetMaxY(self.frame) - 50 )
         spriteDonuts.xScale = 1
         spriteDonuts.yScale = 1
+        spriteDonuts.fieldBitMask = PhysicsCategories.Donuts.rawValue
+
         spriteDonuts.physicsBody = SKPhysicsBody(circleOfRadius: (64 / 2))
-        spriteDonuts.physicsBody?.usesPreciseCollisionDetection = true
+        spriteDonuts.physicsBody?.affectedByGravity = false
+        spriteDonuts.physicsBody?.allowsRotation = false
+        spriteDonuts.particleAction = DonutsAction()
+        println("moge")
+//        spriteDonuts.physicsBody?.usesPreciseCollisionDetection = true
+//        spriteDonuts.physicsBody?.categoryBitMask = PhysicsCategories.Donuts.rawValue
+//        spriteDonuts.physicsBody?.collisionBitMask = PhysicsCategories.Donuts.rawValue | PhysicsCategories.Player.rawValue
+//        spriteDonuts.physicsBody?.contactTestBitMask = PhysicsCategories.Donuts.rawValue | PhysicsCategories.Player.rawValue
         self.addChild(spriteDonuts)
 
     }
@@ -78,5 +103,13 @@ class GameScene: SKScene {
 
     override func update(currentTime: CFTimeInterval) {
         /* Called before each frame is rendered */
+        //self.playerNode.position = CGPointMake(self.playerNode.position.x, 100)
     }
+}
+
+extension GameScene : SKPhysicsContactDelegate {
+    func didBeginContact(contact: SKPhysicsContact) {
+        println(contact)
+    }
+
 }
